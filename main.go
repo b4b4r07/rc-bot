@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -37,16 +38,26 @@ func run(api *slack.Client) int {
 
 			case *slack.MessageEvent:
 				pat := pattern.FindStringSubmatch(ev.Text)
-				result, err := runCommand(pat[1])
-				if err == nil {
-					params = getPostMessageParameters(result, true)
-				} else {
-					params = getPostMessageParameters(err.Error(), false)
-				}
-				_, _, err = api.PostMessage(ev.Channel, "", params)
-				if err != nil {
-					log.Print(err)
-					return 1
+				if len(pat) > 1 {
+					switch ev.User {
+					case "U0WFNAD1N_":
+						result, err := runCommand(pat[1])
+						if err == nil {
+							params = getPostMessageParameters(result, true)
+						} else {
+							params = getPostMessageParameters(err.Error(), false)
+						}
+					default:
+						params = getPostMessageParameters(
+							fmt.Sprintf("`%s`: permission denied", ev.User),
+							false,
+						)
+					}
+					_, _, err := api.PostMessage(ev.Channel, "", params)
+					if err != nil {
+						log.Print(err)
+						return 1
+					}
 				}
 
 			case *slack.InvalidAuthEvent:
