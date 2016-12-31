@@ -36,23 +36,17 @@ func run(api *slack.Client) int {
 				log.Print("Connected!")
 
 			case *slack.MessageEvent:
-				if len(ev.Text) > 0 {
-					pat := pattern.FindStringSubmatch(ev.Text)
-					if len(pat) == 0 {
-						params = getPostMessageParameters("too few arguments", false)
-					} else {
-						result, err := runCommand(pat[1])
-						if err == nil {
-							params = getPostMessageParameters(result, true)
-						} else {
-							params = getPostMessageParameters(err.Error(), false)
-						}
-					}
-					_, _, err := api.PostMessage(ev.Channel, "", params)
-					if err != nil {
-						log.Print(err)
-						return 1
-					}
+				pat := pattern.FindStringSubmatch(ev.Text)
+				result, err := runCommand(pat[1])
+				if err == nil {
+					params = getPostMessageParameters(result, true)
+				} else {
+					params = getPostMessageParameters(err.Error(), false)
+				}
+				_, _, err = api.PostMessage(ev.Channel, "", params)
+				if err != nil {
+					log.Print(err)
+					return 1
 				}
 
 			case *slack.InvalidAuthEvent:
